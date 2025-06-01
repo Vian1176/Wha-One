@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Wha-One Zenith PRO MAX</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #0d1117;
+      color: #fff;
+      padding: 1rem;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+      color: #58a6ff;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+      padding: 0.75rem;
+      background: #161b22;
+      color: white;
+      border: 1px solid #30363d;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      resize: vertical;
+    }
+    .btn {
+      padding: 0.6rem 1.2rem;
+      margin: 0.5rem 0.25rem;
+      border: none;
+      border-radius: 0.5rem;
+      background-color: #238636;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn:hover {
+      background-color: #2ea043;
+    }
+    #gallery {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .image-box {
+      position: relative;
+      overflow: hidden;
+      border-radius: 0.75rem;
+      background: #21262d;
+    }
+    .image-box img {
+      width: 100%;
+      border-radius: 0.75rem;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+    .image-box img:hover {
+      transform: scale(1.03);
+    }
+    .download-btn {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background: rgba(0,0,0,0.7);
+      padding: 0.4rem;
+      border-radius: 50%;
+      cursor: pointer;
+      color: #58a6ff;
+      font-size: 1.2rem;
+    }
+    .spinner {
+      display: none;
+      margin: 1rem auto;
+      width: 40px;
+      height: 40px;
+      border: 4px solid #30363d;
+      border-top: 4px solid #58a6ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    footer {
+      margin-top: 2rem;
+      text-align: center;
+      font-size: 0.85rem;
+      color: #8b949e;
+    }
+  </style>
+</head>
+<body>
+  <h1>✨ Wha-One Zenith PRO MAX</h1>
+  <textarea id="prompt" placeholder="Tulis prompt di sini..."></textarea>
+  <div style="text-align:center;">
+    <button class="btn" onclick="generateImages()">🎨 Generate</button>
+    <button class="btn" onclick="clearPrompt()">🧹 Clear</button>
+    <button class="btn" onclick="copyPrompt()">📋 Copy</button>
+    <button class="btn" onclick="loadRandomPrompt()">🎲 Inspirasi</button>
+  </div>
+  <div class="spinner" id="loader"></div>
+  <div id="gallery"></div>
+  <footer>Wha-One by Vian1176 • Tanpa watermark • Auto-enhanced</footer>
+
+  <script>
+    const loader = document.getElementById("loader");
+    const gallery = document.getElementById("gallery");
+    const promptBox = document.getElementById("prompt");
+
+    const examplePrompts = [
+      "Lukisan minyak kuda di padang rumput",
+      "Sketsa pensil wajah wanita misterius",
+      "Cyberpunk kota masa depan dengan cahaya neon",
+      "Ilustrasi kartun anak-anak di luar angkasa",
+    ];
+
+    function loadRandomPrompt() {
+      const random = examplePrompts[Math.floor(Math.random() * examplePrompts.length)];
+      promptBox.value = random;
+    }
+
+    function clearPrompt() {
+      promptBox.value = "";
+    }
+
+    function copyPrompt() {
+      navigator.clipboard.writeText(promptBox.value);
+      alert("Prompt disalin!");
+    }
+
+    async function generateImages() {
+      const rawPrompt = promptBox.value.trim();
+      if (!rawPrompt) return alert("Prompt kosong!");
+
+      loader.style.display = "block";
+      gallery.innerHTML = "";
+
+      const finalPrompt = await enhancePrompt(rawPrompt);
+      const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?n=4&seed=${Math.random()}`;
+
+      for (let i = 0; i < 4; i++) {
+        const img = new Image();
+        img.src = url + `&index=${i}`;
+        img.onload = () => loader.style.display = "none";
+        const box = document.createElement("div");
+        box.className = "image-box";
+        img.onclick = () => window.open(img.src, "_blank");
+        const downloadBtn = document.createElement("div");
+        downloadBtn.className = "download-btn";
+        downloadBtn.innerHTML = "⬇️";
+        downloadBtn.onclick = (e) => {
+          e.stopPropagation();
+          const link = document.createElement("a");
+          link.href = img.src;
+          link.download = "wha-one-image.jpg";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        };
+        box.appendChild(img);
+        box.appendChild(downloadBtn);
+        gallery.appendChild(box);
+      }
+    }
+
+    async function enhancePrompt(prompt) {
+      const style = detectStyle(prompt);
+      const translated = await translateToEnglish(prompt);
+      return `${translated}, ${style}, high quality, no watermark, trending on artstation`;
+    }
+
+    function detectStyle(prompt) {
+      prompt = prompt.toLowerCase();
+      if (prompt.includes("sketsa")) return "pencil sketch";
+      if (prompt.includes("kartun")) return "cartoon style";
+      if (prompt.includes("lukisan")) return "oil painting";
+      if (prompt.includes("realistik")) return "photorealistic";
+      return "digital art";
+    }
+
+    async function translateToEnglish(text) {
+      const map = {
+        "lukisan": "painting", "kuda": "horse", "wanita": "woman", 
+        "misterius": "mysterious", "kota": "city", "masa depan": "future",
+        "neon": "neon", "anak-anak": "children", "luar angkasa": "space"
+      };
+      return text.split(" ").map(word => map[word] || word).join(" ");
+    }
+  </script>
+</body>
+</html>
